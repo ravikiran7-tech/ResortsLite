@@ -17,7 +17,7 @@
     <artifactId>resortsLite</artifactId>
     <version>1.0.0</version>
     <name>ResortsLite</name>
-    <description>Resort booking demo — Java 21 / Spring Boot 3.2.x</description>
+    <description>Resort booking demo — Java 21 / Spring Boot 3.2.x / PostgreSQL 16</description>
 
     <properties>
         <!-- Updated from 1.8 to 21 (JAVA8_TO_21_DEPENDENCY_UPDATES, JAVA8_TO_21_LOMBOK_CONFIGURATION) -->
@@ -48,18 +48,18 @@
             <artifactId>commons-collections</artifactId>
             <version>3.2.2</version>
         </dependency>
+        <!-- PostgreSQL JDBC driver — replaces MySQL connector for PostgreSQL 16 target database -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.3</version>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- H2 retained for in-memory testing only -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <!-- MySQL connector for production use — updated to 8.2.0 for Java 21 support -->
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <version>8.2.0</version>
-            <scope>runtime</scope>
-            <optional>true</optional>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
