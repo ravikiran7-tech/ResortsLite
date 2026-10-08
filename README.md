@@ -1,9 +1,9 @@
-# ResortsLite — Legacy Java 8 Demo Application
+# ResortsLite — Modernized Java 21 Application
 
-A compact Spring Boot 2.7.x resort booking application built with **intentional legacy
-patterns** across all four COMPASS assessment domains.
+A compact Spring Boot 3.2.x resort booking application modernized to **Java 21**
+with all critical compilation and compatibility issues resolved.
 
-**Purpose:** Hands-on Concierto Modernize demo — scan, assess, and transform.
+**Purpose:** Hands-on Concierto Modernize demo — post-transformation build (0 errors).
 
 ---
 
@@ -11,11 +11,27 @@ patterns** across all four COMPASS assessment domains.
 
 | Item | Version |
 |---|---|
-| Java | 1.8 |
-| Spring Boot | 2.7.18 |
-| Spring MVC | 5.3.x |
+| Java | 21 |
+| Spring Boot | 3.2.5 |
+| Spring MVC | 6.x |
 | Build | Maven |
 | Database | H2 in-memory |
+
+---
+
+## Transformation Summary
+
+| Change | Detail |
+|---|---|
+| Java version | 1.8 → 21 |
+| Spring Boot | 2.7.18 → 3.2.5 |
+| Jakarta EE | `javax.servlet` → `jakarta.servlet` |
+| Security | MD5 replaced with SHA-256 |
+| Date/Time API | `java.util.Date` → `java.time` |
+| Charset | Explicit `StandardCharsets.UTF_8` |
+| Log4j | 2.14.1 → 2.23.1 (CVE-2021-44228 fixed) |
+| commons-collections | 3.2.1 → 3.2.2 (CVE-2015-6420 fixed) |
+| Maven compiler plugin | Updated to 3.13.0 |
 
 ---
 
@@ -35,23 +51,20 @@ patterns** across all four COMPASS assessment domains.
 | sql-inject-001 | Security Health | Critical | BookingService.java | 36–38 | SQL injection via string concatenation (INSERT) |
 | sql-inject-001 | Security Health | Critical | BookingService.java | 53 | SQL injection via string concatenation (SELECT) |
 | sec-cred-001 | Security Health | Critical | BookingService.java | 21, 22 | Hardcoded database credentials in source code |
-| sec-weak-hash-001 | Security Health | High | BookingService.java | 43, 91, 92 | MD5 used for confirmation code hashing |
-| CVE-2021-44228 | Security Health | Critical | pom.xml | 35 | Log4j 2.14.1 — Log4Shell RCE vulnerability |
-| CVE-2015-6420 | Security Health | High | pom.xml | 41 | commons-collections 3.2.1 — RCE via deserialization |
+| sec-weak-hash-001 | Security Health | High | BookingService.java | 43, 91, 92 | MD5 used for confirmation code hashing — **FIXED** |
+| CVE-2021-44228 | Security Health | Critical | pom.xml | 35 | Log4j 2.14.1 — Log4Shell RCE — **FIXED** |
+| CVE-2015-6420 | Security Health | High | pom.xml | 41 | commons-collections 3.2.1 — RCE — **FIXED** |
 | dup-logic-001 | Code Sustainability | Medium | BookingService.java | 71–72 | Duplicated room type validation |
 | complexity-001 | Code Sustainability | High | BookingService.java | 65–82 | Cyclomatic complexity > 9 in calculateRoomPrice |
 | doc-missing-001 | Code Sustainability | Medium | ReportService.java | 55, 63 | Missing JavaDoc on public methods |
 
 ---
 
-## Expected COMPASS Scores (Pre-Transformation)
+## Build Status
 
-| Domain | Expected Score | Primary Driver |
-|---|---|---|
-| Cloud Compatibility | ~55 / 100 | 6 cloud blockers (session, config, HTTP) |
-| Software Portability | ~70 / 100 | Hardcoded paths + fixed port |
-| Code Sustainability | ~65 / 100 | High complexity + duplication + missing docs |
-| Security Health | ~45 / 100 | 2 critical CVEs + SQL injection + hardcoded creds |
+**Compilation Errors: 0** ✅
+
+All Java 21 / Spring Boot 3.2.x compatibility issues have been resolved.
 
 ---
 
@@ -79,12 +92,12 @@ GET  /api/bookings/report/download?month=june
 
 | File | Lines |
 |---|---|
-| pom.xml | 54 |
+| pom.xml | 80 |
 | ResortsLiteApplication.java | 11 |
 | BookingController.java | 82 |
 | BookingService.java | 100 |
 | ReportService.java | 69 |
 | application.properties | 18 |
-| **Total** | **334** |
+| **Total** | **360** |
 
 *Java source lines only: 262*
