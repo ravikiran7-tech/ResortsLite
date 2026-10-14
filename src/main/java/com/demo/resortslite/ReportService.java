@@ -5,8 +5,10 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+// Updated: replaced legacy java.util.Date / SimpleDateFormat with java.time API (Java 8+, thread-safe)
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,7 +41,9 @@ public class ReportService {
                 reportDir.mkdirs();
             }
 
-            FileWriter writer = new FileWriter(fullPath);
+            // Updated: FileWriter now explicitly specifies UTF-8 charset to comply with
+            // Java 18+ UTF-8 default charset change (JAVA8_TO_25_UTF8_DEFAULT_CHARSET rule)
+            FileWriter writer = new FileWriter(fullPath, StandardCharsets.UTF_8);
             writer.write("BookingID,GuestName,RoomType,CheckIn,CheckOut,Amount\n");
             writer.write("BK-001,John Smith,SUITE,2024-03-01,2024-03-05,1750.00\n");
             writer.write("BK-002,Jane Doe,DELUXE,2024-03-03,2024-03-07,960.00\n");
@@ -67,7 +71,9 @@ public class ReportService {
     }
 
     public Map<String, Object> getSystemInfo() { // doc-missing-001
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        // Updated: replaced legacy new Date() + SimpleDateFormat with java.time.LocalDateTime
+        // and DateTimeFormatter — thread-safe and compatible with Java 25
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         Map<String, Object> info = new HashMap<>();
         info.put("reportPath", REPORT_BASE_PATH);  // czr-java-001
         info.put("backupPath", BACKUP_PATH);        // czr-java-001
