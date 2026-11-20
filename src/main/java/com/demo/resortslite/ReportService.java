@@ -1,10 +1,14 @@
 package com.demo.resortslite;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -18,6 +22,20 @@ public class ReportService {
     // Must use volume mounts, cloud object storage (S3 / Azure Blob), or environment variable.
     private static final String REPORT_BASE_PATH = "/var/legacy/reports/"; // czr-java-001
 
+    // Reports are persisted to Amazon S3 instead of the local file system.
+    private final S3Client s3Client;
+
+    @Value("${app.reports.s3.bucket:${REPORTS_S3_BUCKET:resortslite-reports}}")
+    private String reportsBucket;
+
+    @Value("${app.reports.s3.prefix:${REPORTS_S3_PREFIX:reports/}}")
+    private String reportsPrefix;
+
+    @Autowired
+    public ReportService(S3Client s3Client) {
+        this.s3Client = s3Client;
+    }
+
     // VIOLATION czr-java-001 [Software Portability / Mandatory]: Windows-style absolute path
     // will fail on any Linux-based container or cloud host. Hard dependency on OS path structure.
     private static final String BACKUP_PATH = "C:\\ResortBackups\\nightly\\"; // czr-java-001
@@ -29,27 +47,29 @@ public class ReportService {
 
     public Map<String, Object> generateMonthlyReport(String month, String year) {
         String fileName = "resort_report_" + month + "_" + year + ".csv";
-        String fullPath = REPORT_BASE_PATH + fileName; // czr-java-001
+        String objectKey = reportsPrefix + fileName;
 
         Map<String, Object> result = new HashMap<>();
 
         try {
-            File reportDir = new File(REPORT_BASE_PATH); // czr-java-001
-            if (!reportDir.exists()) {
-                reportDir.mkdirs();
-            }
+            StringBuilder csv = new StringBuilder();
+            csv.append("BookingID,GuestName,RoomType,CheckIn,CheckOut,Amount\n");
+            csv.append("BK-001,John Smith,SUITE,2024-03-01,2024-03-05,1750.00\n");
+            csv.append("BK-002,Jane Doe,DELUXE,2024-03-03,2024-03-07,960.00\n");
 
-            FileWriter writer = new FileWriter(fullPath);
-            writer.write("BookingID,GuestName,RoomType,CheckIn,CheckOut,Amount\n");
-            writer.write("BK-001,John Smith,SUITE,2024-03-01,2024-03-05,1750.00\n");
-            writer.write("BK-002,Jane Doe,DELUXE,2024-03-03,2024-03-07,960.00\n");
-            writer.close();
+            PutObjectRequest request = PutObjectRequest.builder()
+                    .bucket(reportsBucket)
+                    .key(objectKey)
+                    .contentType("text/csv")
+                    .build();
+            s3Client.putObject(request,
+                    RequestBody.fromBytes(csv.toString().getBytes(StandardCharsets.UTF_8)));
 
             result.put("status", "generated");
-            result.put("path", fullPath);
+            result.put("path", "s3://" + reportsBucket + "/" + objectKey);
             result.put("serverPort", SERVER_PORT); // czr-port-001
 
-        } catch (IOException e) {
+        } catch (S3Exception e) {
             result.put("status", "error");
             result.put("message", e.getMessage());
         }
@@ -69,7 +89,7 @@ public class ReportService {
     public Map<String, Object> getSystemInfo() { // doc-missing-001
         String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         Map<String, Object> info = new HashMap<>();
-        info.put("reportPath", REPORT_BASE_PATH);  // czr-java-001
+        info.put("reportPath", "s3://" + reportsBucket + "/" + reportsPrefix);  // czr-java-001
         info.put("backupPath", BACKUP_PATH);        // czr-java-001
         info.put("serverPort", SERVER_PORT);        // czr-port-001
         info.put("generatedAt", timestamp);
